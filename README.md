@@ -85,6 +85,34 @@ budget = {
 
 
 
+## 📑 Inputs
+| Name                       | Description                                                                                  | Type     | Default                            | Required |
+| -------------------------- | -------------------------------------------------------------------------------------------- | -------- | ---------------------------------- | -------- |
+| name                       | Name of the resource                                                                         | `string` | `${local.common_name}-${each.key}` | no       |
+| budget_type                | Type of budget                                                                               | `string` | `COST`                             | no       |
+| default_sns_topic_name     | Default SNS topic name                                                                       | `string` | `local.default_sns_topic_name`     | no       |
+| limit_amount               | Budget limit amount                                                                          | `number` | `null`                             | no       |
+| limit_unit                 | Unit of the budget limit                                                                     | `string` | `USD`                              | no       |
+| time_unit                  | Time unit for the budget                                                                     | `string` | `null`                             | no       |
+| auto_adjust_data           | Auto-adjustment data configuration                                                           | `map`    | `{}`                               | no       |
+| cost_types                 | Cost type configuration                                                                      | `map`    | `{}`                               | no       |
+| planned_limit              | Planned budget limit                                                                         | `number` | `null`                             | no       |
+| threshold                  | Threshold when the notification should be sent                                               | `list`   | `[]`                               | no       |
+| notification_type          | What kind of budget value to notify on                                                       | `string` | `""`                               | no       |
+| subscriber_email_addresses | E-Mail addresses to notify                                                                   | `list`   | `[]`                               | no       |
+| subscriber_sns_topic_arns  | SNS topics to notify                                                                         | `list`   | `[data.aws_sns_topic.alerts.arn]`  | no       |
+| sensitivity                | Metric expression sensitivity                                                                | `number` | `2`                                | no       |
+| enable                     | Enable or disable the creation of Cost Anomaly notifications                                 | `bool`   | `false`                            | no       |
+| monitor_type               | The possible type values.                                                                    | `string` | `DIMENSIONAL`                      | no       |
+| monitor_dimension          | The dimensions to evaluate (Required, if monitor_type is DIMENSIONAL).                       | `string` | `SERVICE`                          | no       |
+| monitor_specification      | A valid JSON representation for the Expression object (Required, if monitor_type is CUSTOM). | `map`    | `{}`                               | no       |
+| frequency                  | The frequency that anomaly reports are sent.                                                 | `string` | `IMMEDIATE`                        | no       |
+| type                       | The type of subscription.                                                                    | `string` | `SNS`                              | no       |
+| address                    | The address of the subscriber.                                                               | `string` | `data.aws_sns_topic.alerts.arn`    | no       |
+| threshold_absolute         | The threshold_absolute for anomaly                                                           | `string` | `null`                             | no       |
+| threshold_percentage       | The threshold_percentage for anomaly                                                         | `string` | `null`                             | no       |
+| tags                       | Common tags for resources                                                                    | `map`    | `local.common_tags`                | no       |
+
 
 
 
