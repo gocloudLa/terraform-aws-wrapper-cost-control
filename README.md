@@ -12,7 +12,7 @@ The Terraform Wrapper for Cost Control simplifies the configuration of monitorin
 
 - 💰 [Management of multiple notifications for budgets](#management-of-multiple-notifications-for-budgets) - It allows defining and managing multiple notifications according to the defined threshold levels.
 
-- 💰 [Budget configuration based on the last few months](#budget-configuration-based-on-the-last-few-months) - It allows you to configure a budget based on the last 6 months to dynamically adjust the threshold.
+- 💰 [Budget configuration based on the last few months](#budget-configuration-based-on-the-last-few-months) - It allows you to configure a budget based on the last X months to dynamically adjust the threshold.
 
 
 
@@ -61,7 +61,7 @@ budget = {
 
 
 ### Budget configuration based on the last few months
-It allows you to configure a budget based on the last 6 months to dynamically adjust the threshold.
+It allows you to configure a budget based on the last X months to dynamically adjust the threshold.
 
 
 <details><summary>Configuration Code</summary>
@@ -111,7 +111,6 @@ budget = {
 | address                    | The address of the subscriber.                                                               | `string` | `data.aws_sns_topic.alerts.arn`    | no       |
 | threshold_absolute         | The threshold_absolute for anomaly                                                           | `string` | `null`                             | no       |
 | threshold_percentage       | The threshold_percentage for anomaly                                                         | `string` | `null`                             | no       |
-| tags                       | Common tags for resources                                                                    | `map`    | `local.common_tags`                | no       |
 
 
 
