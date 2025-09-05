@@ -17,7 +17,7 @@ module "budget" {
   subscriber_sns_topic_arns  = try(each.value.subscriber_sns_topic_arns, var.cost_control_defaults.budget.subscriber_sns_topic_arns, [])
   planned_limit              = try(each.value.planned_limit, var.cost_control_defaults.budget.planned_limit, [])
 
-  tags = local.common_tags
+  tags = merge(local.common_tags, try(each.value.tags, var.cost_control_defaults.tags, null))
 }
 
 module "cost_anomaly" {
@@ -34,5 +34,5 @@ module "cost_anomaly" {
   threshold_absolute     = try(var.cost_control_parameters.cost_anomaly.threshold_absolute, var.cost_control_defaults.cost_anomaly.threshold_absolute, null)
   threshold_percentage   = try(var.cost_control_parameters.cost_anomaly.threshold_percentage, var.cost_control_defaults.cost_anomaly.threshold_percentage, null)
 
-  tags = local.common_tags
+  tags = merge(local.common_tags, try(each.value.tags, var.cost_control_defaults.tags, null))
 }
