@@ -34,5 +34,5 @@ module "cost_anomaly" {
   threshold_absolute     = try(var.cost_control_parameters.cost_anomaly.threshold_absolute, var.cost_control_defaults.cost_anomaly.threshold_absolute, null)
   threshold_percentage   = try(var.cost_control_parameters.cost_anomaly.threshold_percentage, var.cost_control_defaults.cost_anomaly.threshold_percentage, null)
 
-  tags = merge(local.common_tags, try(each.value.tags, var.cost_control_defaults.tags, null))
+  tags = merge(local.common_tags, try(var.cost_control_parameters.tags, var.cost_control_defaults.tags, null))
 }
