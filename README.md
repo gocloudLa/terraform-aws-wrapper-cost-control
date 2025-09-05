@@ -111,6 +111,7 @@ budget = {
 | address                    | The address of the subscriber.                                                               | `string` | `data.aws_sns_topic.alerts.arn`    | no       |
 | threshold_absolute         | The threshold_absolute for anomaly                                                           | `string` | `null`                             | no       |
 | threshold_percentage       | The threshold_percentage for anomaly                                                         | `string` | `null`                             | no       |
+| tags                       | A map of tags to assign to resources.                                                        | `map`    | `{}`                               | no       |
 
 
 
