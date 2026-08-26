@@ -34,7 +34,7 @@ resource "aws_budgets_budget" "alarms" {
     }
   }
   dynamic "cost_types" {
-    for_each = var.cost_types != {} ? [var.cost_types] : []
+    for_each = length(var.cost_types) > 0 && length(var.metrics) == 0 ? [var.cost_types] : []
 
     content {
       include_credit             = lookup(cost_types.value, "include_credit", null)
@@ -48,6 +48,19 @@ resource "aws_budgets_budget" "alarms" {
       include_upfront            = lookup(cost_types.value, "include_upfront", null)
       use_amortized              = lookup(cost_types.value, "use_amortized", null)
       use_blended                = lookup(cost_types.value, "use_blended", null)
+    }
+  }
+
+  metrics = var.metrics
+
+  dynamic "filter_expression" {
+    for_each = var.filter_expression != null ? [var.filter_expression] : []
+
+    content {
+      dimensions {
+        key    = filter_expression.value.dimensions.key
+        values = filter_expression.value.dimensions.values
+      }
     }
   }
 

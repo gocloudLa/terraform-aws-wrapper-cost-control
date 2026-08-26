@@ -98,3 +98,16 @@ variable "default_sns_topic_name" {
   description = ""
   default     = ""
 }
+
+
+variable "filter_expression" {
+  description = "Filter expression dimensions"
+  type        = map(any)
+  default     = {}
+}
+
+variable "metrics" {
+  description = "Metrics to use"
+  type        = list(string)
+  default     = []
+}
