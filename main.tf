@@ -17,8 +17,8 @@ module "budget" {
   subscriber_sns_topic_arns  = try(each.value.subscriber_sns_topic_arns, var.cost_control_defaults.budget.subscriber_sns_topic_arns, [])
   planned_limit              = try(each.value.planned_limit, var.cost_control_defaults.budget.planned_limit, [])
   metrics                    = try(each.value.metrics, var.cost_control_defaults.budget.metrics, [])
-  filter_expression          = try(each.value.filter_expression, var.cost_control_defaults.budget.filter_expression, {}) 
-  
+  filter_expression          = try(each.value.filter_expression, var.cost_control_defaults.budget.filter_expression, {})
+
 
   tags = merge(local.common_tags, try(each.value.tags, var.cost_control_defaults.tags, null))
 }
