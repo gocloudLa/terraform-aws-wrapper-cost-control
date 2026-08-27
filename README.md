@@ -140,8 +140,7 @@ budget = {
 | address                    | The address of the subscriber.                                                               | `string` | `data.aws_sns_topic.alerts.arn`    | no       |
 | threshold_absolute         | The threshold_absolute for anomaly                                                           | `string` | `null`                             | no       |
 | threshold_percentage       | The threshold_percentage for anomaly                                                         | `string` | `null`                             | no       |
-| metrics                    | Metrics to use (e.g., BLENDED_COST, UNBLENDED_COST, AMORTIZED_COST)                          | `list`   | `[]`                               | no       |
-| filter_expression          | Filter expression dimensions to scope the budget (e.g., by SERVICE or CHARGE_TYPE)           | `map`    | `{}`                               | no       |
+| metrics                    | Metrics to use (e.g., BLENDED_COST, UNBLENDED_COST, AMORTIZED_COST)                          | `list`   | `["UnblendedCost"]`                | no       |
 | tags                       | A map of tags to assign to resources.                                                        | `map`    | `{}`                               | no       |
 
 
