@@ -67,6 +67,30 @@ features:
                 }
           }
           ```
+  - icon: 🔍
+    title: Budget filtering with metrics and filter expressions
+    short_description: It allows filtering budgets by dimensions (e.g., specific AWS services or charge types) and using alternative cost metrics like BLENDED_COST or AMORTIZED_COST.
+    long_description: |
+      It allows filtering budgets by dimensions (e.g., specific AWS services or charge types) and using alternative cost metrics like BLENDED_COST or AMORTIZED_COST. When metrics is specified, cost_types is automatically excluded to avoid conflicts.
+    examples:
+      - title: Configuration Code
+        code: |
+          ```hcl
+          budget = {
+                "ec2-monthly-budget" = {
+                  limit_amount = "500"
+                  time_unit    = "MONTHLY"
+                  threshold    = [80, 100]
+                  metrics      = ["BLENDED_COST"]
+                  filter_expression = {
+                    dimensions = {
+                      key    = "SERVICE"
+                      values = ["Amazon Elastic Compute Cloud - Compute"]
+                    }
+                  }
+                }
+          }
+          ```
 important_notes: ""
 input_table: |
   | name | Name of the resource | `string` | `${local.common_name}-${each.key}` | no |
@@ -92,4 +116,9 @@ input_table: |
   | address | The address of the subscriber. | `string` | `data.aws_sns_topic.alerts.arn` | no |
   | threshold_absolute | The threshold_absolute for anomaly | `string` | `null` | no |
   | threshold_percentage | The threshold_percentage for anomaly | `string` | `null` | no |
+  | metrics | Metrics to use (e.g., BLENDED_COST, UNBLENDED_COST, AMORTIZED_COST) | `list` | `["UnblendedCost"]` | no |
+  | filter_expression | Filter expression dimensions to scope the budget (e.g., by SERVICE or CHARGE_TYPE) | `map` | `{{ dimensions = {
+    key    = "RECORD_TYPE"
+    values = ["Usage"]
+  } })}` | no |
   | tags | A map of tags to assign to resources. | `map` | `{}` | no |

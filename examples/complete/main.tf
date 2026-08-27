@@ -24,6 +24,41 @@ module "wrapper_cost_control" {
         }
         notification_type = "ACTUAL"
         threshold         = [110]
+      },
+      "ec2-monthly-budget" = {
+        limit_amount = "500"
+        time_unit    = "MONTHLY"
+        threshold    = [80, 100]
+        metrics      = ["BLENDED_COST"]
+        filter_expression = {
+          dimensions = {
+            key    = "SERVICE"
+            values = ["Amazon Elastic Compute Cloud - Compute"]
+          }
+        }
+      },
+      "support-charges-budget" = {
+        limit_amount = "100"
+        time_unit    = "MONTHLY"
+        threshold    = [90, 100]
+        filter_expression = {
+          dimensions = {
+            key    = "CHARGE_TYPE"
+            values = ["Support"]
+          }
+        }
+      },
+      "usage-only-budget" = {
+        limit_amount = "1500"
+        time_unit    = "MONTHLY"
+        threshold    = [80, 100]
+        metrics      = ["UnblendedCost"]
+        filter_expression = {
+          dimensions = {
+            key    = "RECORD_TYPE"
+            values = ["Usage"]
+          }
+        }
       }
     }
     cost_anomaly = {
