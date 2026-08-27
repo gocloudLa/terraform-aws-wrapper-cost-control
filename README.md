@@ -14,6 +14,8 @@ The Terraform Wrapper for Cost Control simplifies the configuration of monitorin
 
 - 💰 [Budget configuration based on the last few months](#budget-configuration-based-on-the-last-few-months) - It allows you to configure a budget based on the last X months to dynamically adjust the threshold.
 
+- 🔍 [Budget filtering with metrics and filter expressions](#budget-filtering-with-metrics-and-filter-expressions) - It allows filtering budgets by dimensions (e.g., specific AWS services or charge types) and using alternative cost metrics like BLENDED_COST or AMORTIZED_COST.
+
 
 
 
@@ -83,6 +85,33 @@ budget = {
 </details>
 
 
+### Budget filtering with metrics and filter expressions
+It allows filtering budgets by dimensions (e.g., specific AWS services or charge types) and using alternative cost metrics like BLENDED_COST or AMORTIZED_COST. When metrics is specified, cost_types is automatically excluded to avoid conflicts.
+
+
+<details><summary>Configuration Code</summary>
+
+```hcl
+budget = {
+      "ec2-monthly-budget" = {
+        limit_amount = "500"
+        time_unit    = "MONTHLY"
+        threshold    = [80, 100]
+        metrics      = ["BLENDED_COST"]
+        filter_expression = {
+          dimensions = {
+            key    = "SERVICE"
+            values = ["Amazon Elastic Compute Cloud - Compute"]
+          }
+        }
+      }
+}
+```
+
+
+</details>
+
+
 
 
 ## 📑 Inputs
@@ -111,6 +140,8 @@ budget = {
 | address                    | The address of the subscriber.                                                               | `string` | `data.aws_sns_topic.alerts.arn`    | no       |
 | threshold_absolute         | The threshold_absolute for anomaly                                                           | `string` | `null`                             | no       |
 | threshold_percentage       | The threshold_percentage for anomaly                                                         | `string` | `null`                             | no       |
+| metrics                    | Metrics to use (e.g., BLENDED_COST, UNBLENDED_COST, AMORTIZED_COST)                          | `list`   | `[]`                               | no       |
+| filter_expression          | Filter expression dimensions to scope the budget (e.g., by SERVICE or CHARGE_TYPE)           | `map`    | `{}`                               | no       |
 | tags                       | A map of tags to assign to resources.                                                        | `map`    | `{}`                               | no       |
 
 
