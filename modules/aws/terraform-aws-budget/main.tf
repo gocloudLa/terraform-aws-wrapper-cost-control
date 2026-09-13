@@ -28,38 +28,36 @@ resource "aws_budgets_budget" "alarms" {
       last_auto_adjust_time = null
 
       historical_options {
-        budget_adjustment_period   = lookup(auto_adjust_data.value, "budget_adjustment_period", null)
+        budget_adjustment_period   = try(auto_adjust_data.value.budget_adjustment_period, null)
         lookback_available_periods = null
       }
-    }
-  }
-  dynamic "cost_types" {
-    for_each = length(var.cost_types) > 0 && length(var.metrics) == 0 ? [var.cost_types] : []
-
-    content {
-      include_credit             = lookup(cost_types.value, "include_credit", null)
-      include_discount           = lookup(cost_types.value, "include_discount", null)
-      include_other_subscription = lookup(cost_types.value, "include_other_subscription", null)
-      include_recurring          = lookup(cost_types.value, "include_recurring", null)
-      include_refund             = lookup(cost_types.value, "include_refund", null)
-      include_subscription       = lookup(cost_types.value, "include_subscription", null)
-      include_support            = lookup(cost_types.value, "include_support", null)
-      include_tax                = lookup(cost_types.value, "include_tax", null)
-      include_upfront            = lookup(cost_types.value, "include_upfront", null)
-      use_amortized              = lookup(cost_types.value, "use_amortized", null)
-      use_blended                = lookup(cost_types.value, "use_blended", null)
     }
   }
 
   metrics = var.metrics
 
   dynamic "filter_expression" {
-    for_each = var.filter_expression != null ? [var.filter_expression] : []
+    for_each = var.filter_expression != null && var.filter_expression != {} ? [var.filter_expression] : []
 
     content {
-      dimensions {
-        key    = filter_expression.value.dimensions.key
-        values = filter_expression.value.dimensions.values
+      dynamic "dimensions" {
+        for_each = try(filter_expression.value.and, null) == null && try(filter_expression.value.dimensions, null) != null ? [filter_expression.value.dimensions] : []
+
+        content {
+          key    = dimensions.value.key
+          values = dimensions.value.values
+        }
+      }
+
+      dynamic "and" {
+        for_each = try(filter_expression.value.and, [])
+
+        content {
+          dimensions {
+            key    = and.value.dimensions.key
+            values = and.value.dimensions.values
+          }
+        }
       }
     }
   }
@@ -79,9 +77,9 @@ resource "aws_budgets_budget" "alarms" {
   dynamic "planned_limit" {
     for_each = var.planned_limit != [] ? var.planned_limit : []
     content {
-      start_time = lookup(planned_limit.value, "start_time", null)
-      amount     = lookup(planned_limit.value, "amount", null)
-      unit       = lookup(planned_limit.value, "unit", null)
+      start_time = try(planned_limit.value.start_time, null)
+      amount     = try(planned_limit.value.amount, null)
+      unit       = try(planned_limit.value.unit, null)
     }
   }
 

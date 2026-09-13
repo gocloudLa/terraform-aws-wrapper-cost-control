@@ -10,7 +10,6 @@ module "budget" {
   limit_unit                 = try(each.value.limit_unit, var.cost_control_defaults.budget.limit_unit, "USD")
   time_unit                  = try(each.value.time_unit, var.cost_control_defaults.budget.time_unit, null)
   auto_adjust_data           = try(each.value.auto_adjust_data, var.cost_control_defaults.budget.auto_adjust_data, {})
-  cost_types                 = try(each.value.cost_types, var.cost_control_defaults.budget.cost_types, {})
   threshold                  = try(each.value.threshold, var.cost_control_defaults.budget.threshold, [])
   notification_type          = try(each.value.notification_type, var.cost_control_defaults.budget.notification_type, each.value.time_unit == "DAILY" ? "ACTUAL" : "FORECASTED")
   subscriber_email_addresses = try(each.value.subscriber_email_addresses, var.cost_control_defaults.budget.subscriber_email_addresses, [])

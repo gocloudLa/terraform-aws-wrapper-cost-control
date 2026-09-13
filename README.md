@@ -10,11 +10,15 @@ The Terraform Wrapper for Cost Control simplifies the configuration of monitorin
 
 ### ✨ Features
 
-- 💰 [Management of multiple notifications for budgets](#management-of-multiple-notifications-for-budgets) - It allows defining and managing multiple notifications according to the defined threshold levels.
+- 💰 [Budgets](#budgets) - Set a limit, a period, and when to notify. Alarms go to SNS by default. Add subscriber_email_addresses to also send email.
 
-- 💰 [Budget configuration based on the last few months](#budget-configuration-based-on-the-last-few-months) - It allows you to configure a budget based on the last X months to dynamically adjust the threshold.
+- 💰 [Dynamic budget](#dynamic-budget) - The limit is the average of the last X months. threshold 110 means 10% above that average.
 
-- 🔍 [Budget filtering with metrics and filter expressions](#budget-filtering-with-metrics-and-filter-expressions) - It allows filtering budgets by dimensions (e.g., specific AWS services or charge types) and using alternative cost metrics like BLENDED_COST or AMORTIZED_COST.
+- 🚨 [Cost Anomaly Detection](#cost-anomaly-detection) - Optional. A budget is "do not exceed X". Anomaly is "this spend is not normal". Off by default.
+
+- 🔍 [Usage only by default](#usage-only-by-default) - Every budget ignores credits and refunds unless you override filter_expression.
+
+- 🔍 [Alert on a single service](#alert-on-a-single-service) - Optional. Scope a budget to one AWS service. Keep the Usage filter or credits can hide spend again.
 
 
 
@@ -23,18 +27,32 @@ The Terraform Wrapper for Cost Control simplifies the configuration of monitorin
 ```hcl
 cost_control_parameters = {
     budget = {
+      "monthly-cost-budget" = {
+        limit_amount               = "2100"
+        time_unit                  = "MONTHLY"
+        threshold                  = [105, 120]
+        subscriber_email_addresses = ["user@example.com"]
+        # notification_type = "FORECASTED" # Default
+      }
       "daily-cost-budget" = {
         limit_amount = "70"
         time_unit    = "DAILY"
         threshold    = [120]
-        # default_sns_topic_name = "sns-topic-name" # Default: "${local.common_name}-alarms"
+        # notification_type = "ACTUAL" # Default
+      }
+      "dynamic-monthly-budget" = {
+        time_unit = "MONTHLY"
+        auto_adjust_data = {
+          budget_adjustment_period = 6
+        }
+        notification_type = "ACTUAL"
+        threshold         = [110]
       }
     }
     cost_anomaly = {
-      enable               = true # default false
+      enable               = true
       threshold_absolute   = 10
       threshold_percentage = 20
-      # default_sns_topic_name = "sns-topic-name" # Default: "${local.common_name}-alarms"
     }
   }
 ```
@@ -42,11 +60,13 @@ cost_control_parameters = {
 
 ## 🔧 Additional Features Usage
 
-### Management of multiple notifications for budgets
-It allows defining and managing multiple notifications according to the defined threshold levels.
+### Budgets
+Each budget needs `limit_amount`, `time_unit`, and `threshold`. `threshold` is a list of percentages. `[105, 120]` notifies at 105% and 120% of the limit.
+
+Notifications go to the default SNS topic. Add `subscriber_email_addresses` to also email someone.
 
 
-<details><summary>Configuration Code</summary>
+<details><summary>Monthly and daily</summary>
 
 ```hcl
 budget = {
@@ -54,6 +74,14 @@ budget = {
         limit_amount               = "2100"
         time_unit                  = "MONTHLY"
         threshold                  = [105, 120]
+        subscriber_email_addresses = ["user@example.com"]
+        # notification_type = "FORECASTED" # Default
+      }
+      "daily-cost-budget" = {
+        limit_amount = "70"
+        time_unit    = "DAILY"
+        threshold    = [120]
+        # notification_type = "ACTUAL" # Default
       }
 }
 ```
@@ -62,11 +90,15 @@ budget = {
 </details>
 
 
-### Budget configuration based on the last few months
-It allows you to configure a budget based on the last X months to dynamically adjust the threshold.
+### Dynamic budget
+You do not set `limit_amount`. AWS sets the limit to the **average** of the last N months (`budget_adjustment_period`), not to the highest month.
+
+`threshold = [110]` means "alert when this month is 10% above that average". `notification_type = ACTUAL` uses spent-to-date, not the forecast.
+
+Example: last 6 months averaged 1000 USD. The limit this month is 1000. The alarm fires at 1100.
 
 
-<details><summary>Configuration Code</summary>
+<details><summary>Last 6 months</summary>
 
 ```hcl
 budget = {
@@ -75,8 +107,8 @@ budget = {
         auto_adjust_data = {
           budget_adjustment_period = 6
         }
-        notification_type          = "ACTUAL"
-        threshold                  = [110]
+        notification_type = "ACTUAL"
+        threshold         = [110]
       }
 }
 ```
@@ -85,11 +117,67 @@ budget = {
 </details>
 
 
-### Budget filtering with metrics and filter expressions
-It allows filtering budgets by dimensions (e.g., specific AWS services or charge types) and using alternative cost metrics like BLENDED_COST or AMORTIZED_COST. When metrics is specified, cost_types is automatically excluded to avoid conflicts.
+### Cost Anomaly Detection
+Enable it when you want AWS to alert on unexpected spikes, even if you are still under the budget.
+
+| Field | What it does |
+| --- | --- |
+| `enable` | Turns it on. Default `false`. |
+| `threshold_absolute` | Alert if unexpected spend is at least this many USD. |
+| `threshold_percentage` | Alert if unexpected spend is at least this percent above what AWS expected. |
+
+Either threshold can fire the alert.
 
 
-<details><summary>Configuration Code</summary>
+<details><summary>Enable</summary>
+
+```hcl
+cost_anomaly = {
+      enable               = true
+      threshold_absolute   = 10
+      threshold_percentage = 20
+}
+```
+
+
+</details>
+
+
+### Usage only by default
+You do not need to set `filter_expression`. The module adds this block on every budget:
+
+```hcl
+filter_expression = {
+  dimensions = {
+    key    = "RECORD_TYPE"
+    values = ["Usage"]
+  }
+}
+```
+
+AWS credits are a separate charge type (a negative amount). If they are included, net spend can stay below the limit and alarms never fire. Measuring Usage only keeps the alarm on real consumption.
+
+
+<details><summary>Applied by default</summary>
+
+```hcl
+filter_expression = {
+      dimensions = {
+        key    = "RECORD_TYPE"
+        values = ["Usage"]
+      }
+}
+```
+
+
+</details>
+
+
+### Alert on a single service
+Setting `filter_expression` replaces the default. Keep `RECORD_TYPE = Usage` and add the service with `and`.
+
+
+<details><summary>EC2 usage only</summary>
 
 ```hcl
 budget = {
@@ -97,12 +185,21 @@ budget = {
         limit_amount = "500"
         time_unit    = "MONTHLY"
         threshold    = [80, 100]
-        metrics      = ["BLENDED_COST"]
         filter_expression = {
-          dimensions = {
-            key    = "SERVICE"
-            values = ["Amazon Elastic Compute Cloud - Compute"]
-          }
+          and = [
+            {
+              dimensions = {
+                key    = "RECORD_TYPE"
+                values = ["Usage"]
+              }
+            },
+            {
+              dimensions = {
+                key    = "SERVICE"
+                values = ["Amazon Elastic Compute Cloud - Compute"]
+              }
+            }
+          ]
         }
       }
 }
@@ -115,33 +212,33 @@ budget = {
 
 
 ## 📑 Inputs
-| Name                       | Description                                                                                  | Type     | Default                            | Required |
-| -------------------------- | -------------------------------------------------------------------------------------------- | -------- | ---------------------------------- | -------- |
-| name                       | Name of the resource                                                                         | `string` | `${local.common_name}-${each.key}` | no       |
-| budget_type                | Type of budget                                                                               | `string` | `COST`                             | no       |
-| default_sns_topic_name     | Default SNS topic name                                                                       | `string` | `local.default_sns_topic_name`     | no       |
-| limit_amount               | Budget limit amount                                                                          | `number` | `null`                             | no       |
-| limit_unit                 | Unit of the budget limit                                                                     | `string` | `USD`                              | no       |
-| time_unit                  | Time unit for the budget                                                                     | `string` | `null`                             | no       |
-| auto_adjust_data           | Auto-adjustment data configuration                                                           | `map`    | `{}`                               | no       |
-| cost_types                 | Cost type configuration                                                                      | `map`    | `{}`                               | no       |
-| planned_limit              | Planned budget limit                                                                         | `number` | `null`                             | no       |
-| threshold                  | Threshold when the notification should be sent                                               | `list`   | `[]`                               | no       |
-| notification_type          | What kind of budget value to notify on                                                       | `string` | `""`                               | no       |
-| subscriber_email_addresses | E-Mail addresses to notify                                                                   | `list`   | `[]`                               | no       |
-| subscriber_sns_topic_arns  | SNS topics to notify                                                                         | `list`   | `[data.aws_sns_topic.alerts.arn]`  | no       |
-| sensitivity                | Metric expression sensitivity                                                                | `number` | `2`                                | no       |
-| enable                     | Enable or disable the creation of Cost Anomaly notifications                                 | `bool`   | `false`                            | no       |
-| monitor_type               | The possible type values.                                                                    | `string` | `DIMENSIONAL`                      | no       |
-| monitor_dimension          | The dimensions to evaluate (Required, if monitor_type is DIMENSIONAL).                       | `string` | `SERVICE`                          | no       |
-| monitor_specification      | A valid JSON representation for the Expression object (Required, if monitor_type is CUSTOM). | `map`    | `{}`                               | no       |
-| frequency                  | The frequency that anomaly reports are sent.                                                 | `string` | `IMMEDIATE`                        | no       |
-| type                       | The type of subscription.                                                                    | `string` | `SNS`                              | no       |
-| address                    | The address of the subscriber.                                                               | `string` | `data.aws_sns_topic.alerts.arn`    | no       |
-| threshold_absolute         | The threshold_absolute for anomaly                                                           | `string` | `null`                             | no       |
-| threshold_percentage       | The threshold_percentage for anomaly                                                         | `string` | `null`                             | no       |
-| metrics                    | Metrics to use (e.g., BLENDED_COST, UNBLENDED_COST, AMORTIZED_COST)                          | `list`   | `["UnblendedCost"]`                | no       |
-| tags                       | A map of tags to assign to resources.                                                        | `map`    | `{}`                               | no       |
+| Name                               | Description                                                                                                                                       | Type     | Default                                                        | Required |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------- | -------- |
+| budget.name                        | Map key. Resource name is `${common_name}-${key}`                                                                                                 | `string` | —                                                              | yes      |
+| budget.budget_type                 | What the budget tracks. `COST` is money                                                                                                           | `string` | `COST`                                                         | no       |
+| budget.limit_amount                | Budget limit                                                                                                                                      | `number` | `null`                                                         | no       |
+| budget.limit_unit                  | Unit of `limit_amount`                                                                                                                            | `string` | `USD`                                                          | no       |
+| budget.time_unit                   | How often the budget resets. `MONTHLY`, `DAILY`, `QUARTERLY`, or `ANNUALLY`                                                                       | `string` | `null`                                                         | no       |
+| budget.threshold                   | Percentages that send a notification. `[105, 120]` notifies at 105% and 120%                                                                      | `list`   | `[]`                                                           | no       |
+| budget.notification_type           | `ACTUAL` or `FORECASTED`. Daily defaults to `ACTUAL`, others to `FORECASTED`                                                                      | `string` | `""`                                                           | no       |
+| budget.subscriber_email_addresses  | Extra email recipients. SNS is used by default                                                                                                    | `list`   | `[]`                                                           | no       |
+| budget.subscriber_sns_topic_arns   | SNS topic ARNs to notify                                                                                                                          | `list`   | `[]`                                                           | no       |
+| budget.default_sns_topic_name      | SNS topic name when `subscriber_sns_topic_arns` is empty                                                                                          | `string` | `local.default_sns_topic_name`                                 | no       |
+| budget.auto_adjust_data            | Set `budget_adjustment_period` (months). The limit becomes the average of those months                                                            | `map`    | `{}`                                                           | no       |
+| budget.planned_limit               | Optional planned limits for future periods                                                                                                        | `list`   | `[]`                                                           | no       |
+| budget.filter_expression           | Optional. Scope the budget (for example by `SERVICE`). Replaces the default. Keep `RECORD_TYPE = Usage` with `and` when you add another dimension | `map`    | `{ dimensions = { key = "RECORD_TYPE", values = ["Usage"] } }` | no       |
+| budget.metrics                     | Leave unset. The module always counts the budget in USD                                                                                           | `list`   | `["UnblendedCost"]`                                            | no       |
+| budget.tags                        | Tags for the budget                                                                                                                               | `map`    | `{}`                                                           | no       |
+| cost_anomaly.enable                | Turns on Cost Anomaly Detection                                                                                                                   | `bool`   | `false`                                                        | no       |
+| cost_anomaly.threshold_absolute    | Alert if unexpected spend is at least this many USD                                                                                               | `string` | `null`                                                         | no       |
+| cost_anomaly.threshold_percentage  | Alert if unexpected spend is at least this percent above expected                                                                                 | `string` | `null`                                                         | no       |
+| cost_anomaly.monitor_type          | Monitor type. Leave unset                                                                                                                         | `string` | `DIMENSIONAL`                                                  | no       |
+| cost_anomaly.monitor_dimension     | Dimension to evaluate when `monitor_type` is `DIMENSIONAL`                                                                                        | `string` | `SERVICE`                                                      | no       |
+| cost_anomaly.monitor_specification | Custom monitor filter. Only used if `monitor_type` is `CUSTOM`                                                                                    | `map`    | `null`                                                         | no       |
+| cost_anomaly.type                  | Subscriber type                                                                                                                                   | `string` | `SNS`                                                          | no       |
+| cost_anomaly.address               | SNS topic ARN or email. Empty uses the default alarms topic                                                                                       | `string` | `""`                                                           | no       |
+| default_sns_topic_name             | SNS topic name used by Cost Anomaly when `cost_anomaly.address` is empty                                                                          | `string` | `local.default_sns_topic_name`                                 | no       |
+| tags                               | Tags for Cost Anomaly resources                                                                                                                   | `map`    | `{}`                                                           | no       |
 
 
 
