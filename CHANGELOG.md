@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/gocloudLa/terraform-aws-wrapper-cost-control/compare/v1.0.0...v1.1.0) (2026-09-14)
+
+
+### Features
+
+* **budget:** add metrics and filter_expression support ([#3](https://github.com/gocloudLa/terraform-aws-wrapper-cost-control/issues/3)) ([68b3725](https://github.com/gocloudLa/terraform-aws-wrapper-cost-control/commit/68b3725583efd8bb6a69848f3e7821c6da9b8acf))
+
 ## 1.0.0 (2025-09-05)
 
 
