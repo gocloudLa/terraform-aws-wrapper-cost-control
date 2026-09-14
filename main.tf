@@ -10,12 +10,17 @@ module "budget" {
   limit_unit                 = try(each.value.limit_unit, var.cost_control_defaults.budget.limit_unit, "USD")
   time_unit                  = try(each.value.time_unit, var.cost_control_defaults.budget.time_unit, null)
   auto_adjust_data           = try(each.value.auto_adjust_data, var.cost_control_defaults.budget.auto_adjust_data, {})
-  cost_types                 = try(each.value.cost_types, var.cost_control_defaults.budget.cost_types, {})
   threshold                  = try(each.value.threshold, var.cost_control_defaults.budget.threshold, [])
   notification_type          = try(each.value.notification_type, var.cost_control_defaults.budget.notification_type, each.value.time_unit == "DAILY" ? "ACTUAL" : "FORECASTED")
   subscriber_email_addresses = try(each.value.subscriber_email_addresses, var.cost_control_defaults.budget.subscriber_email_addresses, [])
   subscriber_sns_topic_arns  = try(each.value.subscriber_sns_topic_arns, var.cost_control_defaults.budget.subscriber_sns_topic_arns, [])
   planned_limit              = try(each.value.planned_limit, var.cost_control_defaults.budget.planned_limit, [])
+  metrics                    = try(each.value.metrics, var.cost_control_defaults.budget.metrics, ["UnblendedCost"])
+  filter_expression = try(each.value.filter_expression, var.cost_control_defaults.budget.filter_expression, { dimensions = {
+    key    = "RECORD_TYPE"
+    values = ["Usage"]
+  } })
+
 
   tags = merge(local.common_tags, try(each.value.tags, var.cost_control_defaults.tags, null))
 }
