@@ -33,12 +33,6 @@ variable "name" {
   default     = ""
 }
 
-variable "notification" {
-  description = "Object containing Budget Notifications. Can be used multiple times to define more than one budget notification."
-  type        = list(any)
-  default     = []
-}
-
 variable "planned_limit" {
   description = "Object containing Planned Budget Limits. Can be used multiple times to plan more than one budget limit."
   type        = list(any)
@@ -51,40 +45,10 @@ variable "tags" {
   default     = {}
 }
 
-variable "threshold" {
-  description = ""
-  type        = list(number)
-  default     = []
-}
-
 variable "notifications" {
   description = "List of notification objects for the budget. Each object can define a different set of attributes (threshold, notification_type, comparison_operator, threshold_type, subscriber_email_addresses, subscriber_sns_topic_arns)."
   type        = any
   default     = []
-}
-
-variable "subscriber_email_addresses" {
-  description = ""
-  type        = list(string)
-  default     = []
-}
-
-variable "subscriber_sns_topic_arns" {
-  description = ""
-  type        = list(string)
-  default     = []
-}
-
-variable "budget_adjustment_period" {
-  description = ""
-  type        = number
-  default     = null
-}
-
-variable "sns_topic_arn" {
-  type        = string
-  description = ""
-  default     = ""
 }
 
 variable "default_sns_topic_name" {

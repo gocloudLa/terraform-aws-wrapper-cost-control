@@ -1,9 +1,7 @@
 locals {
-  # Si está habilitado y no hay sns_topics_targets, se usa default
-  enable_sns_default = (length(try(var.subscriber_sns_topic_arns, [])) == 0) ? 1 : 0
+  # Se resuelve el SNS por notificación: si alguna no define subscriber_sns_topic_arns, se busca el topic default para usarlo.
+  enable_sns_default = anytrue([for notification in var.notifications : length(try(notification.subscriber_sns_topic_arns, [])) == 0]) ? 1 : 0
 
-  subscriber_sns_topic_arns_tmp = (length(try(var.subscriber_sns_topic_arns, []))
-  > 0 ? var.subscriber_sns_topic_arns : [try(data.aws_sns_topic.default[0].arn, "")])
 }
 
 data "aws_sns_topic" "default" {
@@ -70,8 +68,8 @@ resource "aws_budgets_budget" "alarms" {
       threshold                  = notification.value.threshold
       threshold_type             = try(notification.value.threshold_type, "PERCENTAGE")
       notification_type          = notification.value.notification_type
-      subscriber_sns_topic_arns  = try(notification.value.subscriber_sns_topic_arns, local.subscriber_sns_topic_arns_tmp, null)
-      subscriber_email_addresses = try(notification.value.subscriber_email_addresses, var.subscriber_email_addresses, null)
+      subscriber_sns_topic_arns  = length(try(notification.value.subscriber_sns_topic_arns, [])) > 0 ? notification.value.subscriber_sns_topic_arns : [data.aws_sns_topic.default[0].arn]
+      subscriber_email_addresses = try(notification.value.subscriber_email_addresses, null)
     }
   }
   dynamic "planned_limit" {

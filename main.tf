@@ -3,18 +3,16 @@ module "budget" {
 
   for_each = try(var.cost_control_parameters.budget, {})
 
-  name                       = try(each.value.name, "${local.common_name}-${each.key}")
-  default_sns_topic_name     = try(each.value.default_sns_topic_name, var.cost_control_defaults.budget.default_sns_topic_name, local.default_sns_topic_name)
-  budget_type                = try(each.value.budget_type, var.cost_control_defaults.budget.budget_type, "COST")
-  limit_amount               = try(each.value.limit_amount, var.cost_control_defaults.budget.limit_amount, null)
-  limit_unit                 = try(each.value.limit_unit, var.cost_control_defaults.budget.limit_unit, "USD")
-  time_unit                  = try(each.value.time_unit, var.cost_control_defaults.budget.time_unit, null)
-  auto_adjust_data           = try(each.value.auto_adjust_data, var.cost_control_defaults.budget.auto_adjust_data, {})
-  notifications              = try(each.value.notifications, var.cost_control_defaults.budget.notifications, [])
-  subscriber_email_addresses = try(each.value.subscriber_email_addresses, var.cost_control_defaults.budget.subscriber_email_addresses, [])
-  subscriber_sns_topic_arns  = try(each.value.subscriber_sns_topic_arns, var.cost_control_defaults.budget.subscriber_sns_topic_arns, [])
-  planned_limit              = try(each.value.planned_limit, var.cost_control_defaults.budget.planned_limit, [])
-  metrics                    = try(each.value.metrics, var.cost_control_defaults.budget.metrics, ["UnblendedCost"])
+  name                   = try(each.value.name, "${local.common_name}-${each.key}")
+  default_sns_topic_name = try(each.value.default_sns_topic_name, var.cost_control_defaults.budget.default_sns_topic_name, local.default_sns_topic_name)
+  budget_type            = try(each.value.budget_type, var.cost_control_defaults.budget.budget_type, "COST")
+  limit_amount           = try(each.value.limit_amount, var.cost_control_defaults.budget.limit_amount, null)
+  limit_unit             = try(each.value.limit_unit, var.cost_control_defaults.budget.limit_unit, "USD")
+  time_unit              = try(each.value.time_unit, var.cost_control_defaults.budget.time_unit, null)
+  auto_adjust_data       = try(each.value.auto_adjust_data, var.cost_control_defaults.budget.auto_adjust_data, {})
+  notifications          = try(each.value.notifications, var.cost_control_defaults.budget.notifications, [])
+  planned_limit          = try(each.value.planned_limit, var.cost_control_defaults.budget.planned_limit, [])
+  metrics                = try(each.value.metrics, var.cost_control_defaults.budget.metrics, ["UnblendedCost"])
   filter_expression = try(each.value.filter_expression, var.cost_control_defaults.budget.filter_expression, { dimensions = {
     key    = "RECORD_TYPE"
     values = ["Usage"]
