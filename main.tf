@@ -3,7 +3,7 @@ module "budget" {
 
   for_each = try(var.cost_control_parameters.budget, {})
 
-  name                       = "${local.common_name}-${each.key}"
+  name                       = try(each.value.name, "${local.common_name}-${each.key}")
   default_sns_topic_name     = try(each.value.default_sns_topic_name, var.cost_control_defaults.budget.default_sns_topic_name, local.default_sns_topic_name)
   budget_type                = try(each.value.budget_type, var.cost_control_defaults.budget.budget_type, "COST")
   limit_amount               = try(each.value.limit_amount, var.cost_control_defaults.budget.limit_amount, null)
@@ -11,7 +11,9 @@ module "budget" {
   time_unit                  = try(each.value.time_unit, var.cost_control_defaults.budget.time_unit, null)
   auto_adjust_data           = try(each.value.auto_adjust_data, var.cost_control_defaults.budget.auto_adjust_data, {})
   threshold                  = try(each.value.threshold, var.cost_control_defaults.budget.threshold, [])
+  threshold_type             = try(each.value.threshold_type, var.cost_control_defaults.budget.threshold_type, "PERCENTAGE")
   notification_type          = try(each.value.notification_type, var.cost_control_defaults.budget.notification_type, each.value.time_unit == "DAILY" ? "ACTUAL" : "FORECASTED")
+  notifications              = try(each.value.notifications, var.cost_control_defaults.budget.notifications, [])
   subscriber_email_addresses = try(each.value.subscriber_email_addresses, var.cost_control_defaults.budget.subscriber_email_addresses, [])
   subscriber_sns_topic_arns  = try(each.value.subscriber_sns_topic_arns, var.cost_control_defaults.budget.subscriber_sns_topic_arns, [])
   planned_limit              = try(each.value.planned_limit, var.cost_control_defaults.budget.planned_limit, [])
@@ -29,7 +31,7 @@ module "cost_anomaly" {
   source = "./modules/aws/terraform-aws-ce-detection"
   enable = try(var.cost_control_parameters.cost_anomaly.enable, false)
 
-  name                   = "${local.common_name}-cost-anomaly"
+  name                   = try(var.cost_control_parameters.cost_anomaly.name, "${local.common_name}-cost-anomaly")
   default_sns_topic_name = try(var.cost_control_parameters.default_sns_topic_name, var.cost_control_defaults.budget.default_sns_topic_name, local.default_sns_topic_name)
   monitor_type           = try(var.cost_control_parameters.cost_anomaly.monitor_type, var.cost_control_defaults.cost_anomaly.monitor_type, "DIMENSIONAL")
   monitor_dimension      = try(var.cost_control_parameters.cost_anomaly.monitor_dimension, var.cost_control_defaults.cost_anomaly.monitor_dimension, "SERVICE")

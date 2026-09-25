@@ -63,6 +63,24 @@ variable "notification_type" {
   default     = ""
 }
 
+variable "notifications" {
+  description = <<-EOT
+    Optional list of notification objects to define multiple notifications with
+    different notification_type (e.g. ACTUAL and FORECASTED) on the same budget.
+    When set (non-empty), it takes precedence over the legacy `threshold` +
+    `notification_type` inputs. Each object supports:
+      - threshold                  (number, required)
+      - notification_type          (string, "ACTUAL" | "FORECASTED")
+      - comparison_operator        (string, optional, default "GREATER_THAN")
+      - threshold_type             (string, optional, default "PERCENTAGE")
+      - subscriber_email_addresses (list(string), optional)
+      - subscriber_sns_topic_arns  (list(string), optional)
+    Leave empty to preserve the legacy behavior with no changes.
+  EOT
+  type        = list(any)
+  default     = []
+}
+
 variable "subscriber_email_addresses" {
   description = ""
   type        = list(string)
@@ -104,4 +122,10 @@ variable "metrics" {
   description = "Leave unset. The module always counts the budget in USD."
   type        = list(string)
   default     = []
+}
+
+variable "threshold_type" {
+  description = "What kind of threshold is defined. Can be PERCENTAGE OR ABSOLUTE_VALUE."
+  type        = string
+  default     = ""
 }
