@@ -4,14 +4,6 @@ locals {
 
   subscriber_sns_topic_arns_tmp = (length(try(var.subscriber_sns_topic_arns, []))
   > 0 ? var.subscriber_sns_topic_arns : [try(data.aws_sns_topic.default[0].arn, "")])
-
-  notifications = length(var.notifications) > 0 ? var.notifications : [
-    for t in var.threshold : {
-      threshold         = t
-      notification_type = var.notification_type
-      threshold_type    = var.threshold_type
-    }
-  ]
 }
 
 data "aws_sns_topic" "default" {
@@ -71,13 +63,13 @@ resource "aws_budgets_budget" "alarms" {
   }
 
   dynamic "notification" {
-    for_each = local.notifications
+    for_each = var.notifications
 
     content {
       comparison_operator        = try(notification.value.comparison_operator, "GREATER_THAN")
       threshold                  = notification.value.threshold
-      threshold_type             = try(notification.value.threshold_type, null)
-      notification_type          = try(notification.value.notification_type, null)
+      threshold_type             = try(notification.value.threshold_type, "PERCENTAGE")
+      notification_type          = notification.value.notification_type
       subscriber_sns_topic_arns  = try(notification.value.subscriber_sns_topic_arns, local.subscriber_sns_topic_arns_tmp, null)
       subscriber_email_addresses = try(notification.value.subscriber_email_addresses, var.subscriber_email_addresses, null)
     }
