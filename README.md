@@ -10,7 +10,7 @@ The Terraform Wrapper for Cost Control simplifies the configuration of monitorin
 
 ### ✨ Features
 
-- 💰 [Budgets](#budgets) - Set a limit, a period, and when to notify. Alarms go to SNS by default. Add subscriber_email_addresses to also send email.
+- 💰 [Budgets](#budgets) - Set a limit, a period, and one or more notifications. Alarms go to SNS by default. Add subscriber_email_addresses to also send email.
 
 - 💰 [Dynamic budget](#dynamic-budget) - The limit is the average of the last X months. threshold 110 means 10% above that average.
 
@@ -28,25 +28,42 @@ The Terraform Wrapper for Cost Control simplifies the configuration of monitorin
 cost_control_parameters = {
     budget = {
       "monthly-cost-budget" = {
-        limit_amount               = "2100"
-        time_unit                  = "MONTHLY"
-        threshold                  = [105, 120]
-        subscriber_email_addresses = ["user@example.com"]
-        # notification_type = "FORECASTED" # Default
+        limit_amount = "2100"
+        time_unit    = "MONTHLY"
+        notifications = [
+          {
+            threshold                  = 105
+            notification_type          = "FORECASTED"
+            subscriber_email_addresses = ["user@example.com"]
+          },
+          {
+            threshold                  = 120
+            notification_type          = "ACTUAL"
+            subscriber_email_addresses = ["user@example.com"]
+          }
+        ]
       }
       "daily-cost-budget" = {
         limit_amount = "70"
         time_unit    = "DAILY"
-        threshold    = [120]
-        # notification_type = "ACTUAL" # Default
+        notifications = [
+          {
+            threshold         = 120
+            notification_type = "ACTUAL"
+          }
+        ]
       }
       "dynamic-monthly-budget" = {
         time_unit = "MONTHLY"
         auto_adjust_data = {
           budget_adjustment_period = 6
         }
-        notification_type = "ACTUAL"
-        threshold         = [110]
+        notifications = [
+          {
+            threshold         = 110
+            notification_type = "ACTUAL"
+          }
+        ]
       }
     }
     cost_anomaly = {
@@ -61,9 +78,9 @@ cost_control_parameters = {
 ## 🔧 Additional Features Usage
 
 ### Budgets
-Each budget needs `limit_amount`, `time_unit`, and `threshold`. `threshold` is a list of percentages. `[105, 120]` notifies at 105% and 120% of the limit.
+Each budget needs `limit_amount`, `time_unit`, and a `notifications` list. Every entry defines its own `threshold` (percentage) and `notification_type` (`ACTUAL` or `FORECASTED`), so a single budget can hold several alarms.
 
-Notifications go to the default SNS topic. Add `subscriber_email_addresses` to also email someone.
+Notifications go to the default SNS topic. Add `subscriber_email_addresses` on a notification to also email someone.
 
 
 <details><summary>Monthly and daily</summary>
@@ -71,17 +88,33 @@ Notifications go to the default SNS topic. Add `subscriber_email_addresses` to a
 ```hcl
 budget = {
       "monthly-cost-budget" = {
-        limit_amount               = "2100"
-        time_unit                  = "MONTHLY"
-        threshold                  = [105, 120]
-        subscriber_email_addresses = ["user@example.com"]
-        # notification_type = "FORECASTED" # Default
+        limit_amount = "2100"
+        time_unit    = "MONTHLY"
+        notifications = [
+          {
+            threshold                  = 105                  # Required: Percentage or absolute value that triggers the notification.
+            notification_type          = "FORECASTED"         # Required: "ACTUAL" or "FORECASTED".
+            comparison_operator        = "GREATER_THAN"       # (optional) "GREATER_THAN" | "LESS_THAN" | "EQUAL_TO". Default "GREATER_THAN".
+            threshold_type             = "PERCENTAGE"         # (optional) "PERCENTAGE" | "ABSOLUTE_VALUE". Default "PERCENTAGE".
+            # subscriber_email_addresses = ["user@example.com"] # (optional) list(string). Extra email recipients for this notification.
+            # subscriber_sns_topic_arns  = []  
+          },
+          {
+            threshold                  = 120
+            notification_type          = "ACTUAL"
+            subscriber_email_addresses = ["user@example.com"]
+          }
+        ]
       }
       "daily-cost-budget" = {
         limit_amount = "70"
         time_unit    = "DAILY"
-        threshold    = [120]
-        # notification_type = "ACTUAL" # Default
+        notifications = [
+          {
+            threshold         = 120
+            notification_type = "ACTUAL"
+          }
+        ]
       }
 }
 ```
@@ -93,7 +126,7 @@ budget = {
 ### Dynamic budget
 You do not set `limit_amount`. AWS sets the limit to the **average** of the last N months (`budget_adjustment_period`), not to the highest month.
 
-`threshold = [110]` means "alert when this month is 10% above that average". `notification_type = ACTUAL` uses spent-to-date, not the forecast.
+A notification with `threshold = 110` means "alert when this month is 10% above that average". `notification_type = ACTUAL` uses spent-to-date, not the forecast.
 
 Example: last 6 months averaged 1000 USD. The limit this month is 1000. The alarm fires at 1100.
 
@@ -107,8 +140,12 @@ budget = {
         auto_adjust_data = {
           budget_adjustment_period = 6
         }
-        notification_type = "ACTUAL"
-        threshold         = [110]
+        notifications = [
+          {
+            threshold         = 110
+            notification_type = "ACTUAL"
+          }
+        ]
       }
 }
 ```
@@ -184,7 +221,16 @@ budget = {
       "ec2-monthly-budget" = {
         limit_amount = "500"
         time_unit    = "MONTHLY"
-        threshold    = [80, 100]
+        notifications = [
+          {
+            threshold         = 80
+            notification_type = "FORECASTED"
+          },
+          {
+            threshold         = 100
+            notification_type = "ACTUAL"
+          }
+        ]
         filter_expression = {
           and = [
             {
@@ -219,8 +265,7 @@ budget = {
 | budget.limit_amount                | Budget limit                                                                                                                                      | `number` | `null`                                                         | no       |
 | budget.limit_unit                  | Unit of `limit_amount`                                                                                                                            | `string` | `USD`                                                          | no       |
 | budget.time_unit                   | How often the budget resets. `MONTHLY`, `DAILY`, `QUARTERLY`, or `ANNUALLY`                                                                       | `string` | `null`                                                         | no       |
-| budget.threshold                   | Percentages that send a notification. `[105, 120]` notifies at 105% and 120%                                                                      | `list`   | `[]`                                                           | no       |
-| budget.notification_type           | `ACTUAL` or `FORECASTED`. Daily defaults to `ACTUAL`, others to `FORECASTED`                                                                      | `string` | `""`                                                           | no       |
+| budget.notifications               | List of notification objects. Each budget can hold several alarms                                                                                 | `list`   | `[]`                                                           | no       |
 | budget.subscriber_email_addresses  | Extra email recipients. SNS is used by default                                                                                                    | `list`   | `[]`                                                           | no       |
 | budget.subscriber_sns_topic_arns   | SNS topic ARNs to notify                                                                                                                          | `list`   | `[]`                                                           | no       |
 | budget.default_sns_topic_name      | SNS topic name when `subscriber_sns_topic_arns` is empty                                                                                          | `string` | `local.default_sns_topic_name`                                 | no       |
