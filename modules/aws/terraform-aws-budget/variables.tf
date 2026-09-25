@@ -58,8 +58,8 @@ variable "threshold" {
 }
 
 variable "notifications" {
-  description = "List of notification objects for the budget."
-  type        = list(any)
+  description = "List of notification objects for the budget. Each object can define a different set of attributes (threshold, notification_type, comparison_operator, threshold_type, subscriber_email_addresses, subscriber_sns_topic_arns)."
+  type        = any
   default     = []
 }
 
