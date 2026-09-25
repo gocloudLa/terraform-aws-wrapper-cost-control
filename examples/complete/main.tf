@@ -11,10 +11,10 @@ module "wrapper_cost_control" {
         time_unit    = "MONTHLY"
         notifications = [
           {
-            threshold                  = 105                  # Required: Percentage or absolute value that triggers the notification.
-            notification_type          = "FORECASTED"         # Required: "ACTUAL" or "FORECASTED".
-            comparison_operator        = "GREATER_THAN"       # (optional) "GREATER_THAN" | "LESS_THAN" | "EQUAL_TO". Default "GREATER_THAN".
-            threshold_type             = "PERCENTAGE"         # (optional) "PERCENTAGE" | "ABSOLUTE_VALUE". Default "PERCENTAGE".
+            threshold           = 105            # Required: Percentage or absolute value that triggers the notification.
+            notification_type   = "FORECASTED"   # Required: "ACTUAL" or "FORECASTED".
+            comparison_operator = "GREATER_THAN" # (optional) "GREATER_THAN" | "LESS_THAN" | "EQUAL_TO". Default "GREATER_THAN".
+            threshold_type      = "PERCENTAGE"   # (optional) "PERCENTAGE" | "ABSOLUTE_VALUE". Default "PERCENTAGE".
             # subscriber_email_addresses = ["user@example.com"] # (optional) list(string). Extra email recipients for this notification.
             # subscriber_sns_topic_arns  = []                 # (optional) list(string). SNS topic ARNs. If it not declare, the value is default sns topic
           },
