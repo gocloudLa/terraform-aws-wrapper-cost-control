@@ -7,31 +7,60 @@ module "wrapper_cost_control" {
   cost_control_parameters = {
     budget = {
       "monthly-cost-budget" = {
-        limit_amount               = "2100"
-        time_unit                  = "MONTHLY"
-        threshold                  = [105, 120]
-        subscriber_email_addresses = ["user@example.com"]
-        # notification_type = "FORECASTED" # Default
+        limit_amount = "2100"
+        time_unit    = "MONTHLY"
+        notifications = [
+          {
+            threshold           = 105            # Required: Percentage or absolute value that triggers the notification.
+            notification_type   = "FORECASTED"   # Required: "ACTUAL" or "FORECASTED".
+            comparison_operator = "GREATER_THAN" # (optional) "GREATER_THAN" | "LESS_THAN" | "EQUAL_TO". Default "GREATER_THAN".
+            threshold_type      = "PERCENTAGE"   # (optional) "PERCENTAGE" | "ABSOLUTE_VALUE". Default "PERCENTAGE".
+            # subscriber_email_addresses = ["user@example.com"] # (optional) list(string). Extra email recipients for this notification.
+            # subscriber_sns_topic_arns  = []                 # (optional) list(string). SNS topic ARNs. If it not declare, the value is default sns topic
+          },
+          {
+            threshold                  = 120
+            notification_type          = "ACTUAL"
+            subscriber_email_addresses = ["user@example.com"]
+          }
+        ]
       },
       "daily-cost-budget" = {
         limit_amount = "70"
         time_unit    = "DAILY"
-        threshold    = [120]
-        # notification_type = "ACTUAL" # Default
+        notifications = [
+          {
+            threshold         = 120
+            notification_type = "ACTUAL"
+          }
+        ]
       },
       "dynamic-monthly-budget" = {
         time_unit = "MONTHLY"
         auto_adjust_data = {
           budget_adjustment_period = 6
         }
-        notification_type = "ACTUAL"
-        threshold         = [110]
+        notifications = [
+          {
+            threshold         = 110
+            notification_type = "ACTUAL"
+          }
+        ]
       },
       "ec2-monthly-budget" = {
         limit_amount = "500"
         time_unit    = "MONTHLY"
-        threshold    = [80, 100]
-        filter_expression = {
+        notifications = [
+          {
+            threshold         = 80
+            notification_type = "FORECASTED"
+          },
+          {
+            threshold         = 100
+            notification_type = "ACTUAL"
+          }
+        ]
+        filter_expression = { # Default: RECORD_TYPE = Usage
           and = [
             {
               dimensions = {
@@ -50,7 +79,7 @@ module "wrapper_cost_control" {
       }
     }
     cost_anomaly = {
-      enable               = true # default false
+      enable               = true # Default: false
       threshold_absolute   = 10
       threshold_percentage = 20
     }

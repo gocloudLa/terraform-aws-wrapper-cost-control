@@ -33,12 +33,6 @@ variable "name" {
   default     = ""
 }
 
-variable "notification" {
-  description = "Object containing Budget Notifications. Can be used multiple times to define more than one budget notification."
-  type        = list(any)
-  default     = []
-}
-
 variable "planned_limit" {
   description = "Object containing Planned Budget Limits. Can be used multiple times to plan more than one budget limit."
   type        = list(any)
@@ -51,57 +45,26 @@ variable "tags" {
   default     = {}
 }
 
-variable "threshold" {
-  description = ""
-  type        = list(number)
+variable "notifications" {
+  description = "Notification objects for the budget."
+  type        = any
   default     = []
-}
-
-variable "notification_type" {
-  description = ""
-  type        = string
-  default     = ""
-}
-
-variable "subscriber_email_addresses" {
-  description = ""
-  type        = list(string)
-  default     = []
-}
-
-variable "subscriber_sns_topic_arns" {
-  description = ""
-  type        = list(string)
-  default     = []
-}
-
-variable "budget_adjustment_period" {
-  description = ""
-  type        = number
-  default     = null
-}
-
-variable "sns_topic_arn" {
-  type        = string
-  description = ""
-  default     = ""
 }
 
 variable "default_sns_topic_name" {
   type        = string
-  description = ""
+  description = "SNS topic name used when a notification has no subscriber topic ARNs."
   default     = ""
 }
 
-
 variable "filter_expression" {
-  description = "Dimension filter for the budget (key/values). Console Charge type is RECORD_TYPE, not CHARGE_TYPE. Common keys: RECORD_TYPE, SERVICE, LINKED_ACCOUNT, REGION."
+  description = "Dimension filter that scopes which charges the budget measures."
   type        = map(any)
   default     = {}
 }
 
 variable "metrics" {
-  description = "Leave unset. The module always counts the budget in USD."
+  description = "Cost metrics included in the budget calculation."
   type        = list(string)
   default     = []
 }

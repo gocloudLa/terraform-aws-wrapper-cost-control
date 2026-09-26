@@ -1,17 +1,17 @@
 variable "enable" {
-  description = ""
+  description = "Create the Cost Anomaly monitor and subscription."
   type        = bool
   default     = false
 }
 
 variable "name" {
-  description = "The name of the monitor and suscription."
+  description = "Name of the monitor and subscription."
   type        = string
   default     = ""
 }
 
 variable "monitor_type" {
-  description = "The possible type values."
+  description = "Monitor type. DIMENSIONAL or CUSTOM."
   type        = string
   default     = ""
 }
@@ -34,14 +34,6 @@ variable "tags" {
   default     = {}
 }
 
-### subscription variables
-
-variable "monitor_arn_list" {
-  description = "A list of cost anomaly monitors."
-  type        = list(string)
-  default     = []
-}
-
 variable "type" {
   description = "The type of subscription."
   type        = string
@@ -49,25 +41,25 @@ variable "type" {
 }
 
 variable "address" {
-  description = "The address of the subscriber. If type is SNS, this will be the arn of the sns topic. If type is EMAIL, this will be the destination email address."
+  description = "SNS topic ARN or email address for the subscriber."
   type        = string
   default     = ""
 }
 
 variable "threshold_absolute" {
-  description = ""
+  description = "Minimum unexpected spend in USD that raises an anomaly alert."
   type        = string
   default     = null
 }
 
 variable "threshold_percentage" {
-  description = ""
+  description = "Minimum unexpected spend, as a percent above expected, that raises an anomaly alert."
   type        = string
   default     = null
 }
 
 variable "default_sns_topic_name" {
   type        = string
-  description = ""
+  description = "SNS topic name used when address is empty."
   default     = ""
 }

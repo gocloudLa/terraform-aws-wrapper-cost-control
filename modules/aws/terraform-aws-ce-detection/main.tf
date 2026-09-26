@@ -10,8 +10,8 @@ resource "aws_ce_anomaly_monitor" "monitor" {
 }
 
 locals {
-  # Si está habilitado y no hay address, se usa default
-  enable_sns_default = try(var.enable, false) && (try(var.address, "") == "") ? 1 : 0
+  # 1 when the monitor is enabled and address is empty, so the default topic is looked up.
+  enable_sns_default = try(var.enable, false) ? (try(var.address, "") == "" ? 1 : 0) : 0
 
   address_tmp = (try(var.address, "") != "" ? var.address : try(data.aws_sns_topic.default[0].arn, ""))
 }

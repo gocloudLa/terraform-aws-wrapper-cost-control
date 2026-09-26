@@ -1,15 +1,13 @@
 locals {
-  # Si está habilitado y no hay sns_topics_targets, se usa default
-  enable_sns_default = (length(try(var.subscriber_sns_topic_arns, [])) == 0) ? 1 : 0
-
-  subscriber_sns_topic_arns_tmp = (length(try(var.subscriber_sns_topic_arns, []))
-  > 0 ? var.subscriber_sns_topic_arns : [try(data.aws_sns_topic.default[0].arn, "")])
+  # 1 when any notification omits subscriber_sns_topic_arns, so the default topic is looked up.
+  enable_sns_default = anytrue([for notification in var.notifications : length(try(notification.subscriber_sns_topic_arns, [])) == 0]) ? 1 : 0
 }
 
 data "aws_sns_topic" "default" {
   count = local.enable_sns_default
   name  = var.default_sns_topic_name
 }
+
 resource "aws_budgets_budget" "alarms" {
   name              = var.name
   name_prefix       = null
@@ -37,11 +35,11 @@ resource "aws_budgets_budget" "alarms" {
   metrics = var.metrics
 
   dynamic "filter_expression" {
-    for_each = var.filter_expression != null && var.filter_expression != {} ? [var.filter_expression] : []
+    for_each = var.filter_expression == null ? [] : (length(var.filter_expression) == 0 ? [] : [var.filter_expression])
 
     content {
       dynamic "dimensions" {
-        for_each = try(filter_expression.value.and, null) == null && try(filter_expression.value.dimensions, null) != null ? [filter_expression.value.dimensions] : []
+        for_each = try(filter_expression.value.dimensions, null) == null ? [] : (try(filter_expression.value.and, null) == null ? [filter_expression.value.dimensions] : [])
 
         content {
           key    = dimensions.value.key
@@ -63,15 +61,15 @@ resource "aws_budgets_budget" "alarms" {
   }
 
   dynamic "notification" {
-    for_each = var.threshold != [] ? var.threshold : []
+    for_each = var.notifications
 
     content {
-      comparison_operator        = "GREATER_THAN"
-      threshold                  = notification.value
-      threshold_type             = "PERCENTAGE"
-      notification_type          = try(var.notification_type, null)
-      subscriber_sns_topic_arns  = try(local.subscriber_sns_topic_arns_tmp, null)
-      subscriber_email_addresses = try(var.subscriber_email_addresses, null)
+      comparison_operator        = try(notification.value.comparison_operator, "GREATER_THAN")
+      threshold                  = notification.value.threshold
+      threshold_type             = try(notification.value.threshold_type, "PERCENTAGE")
+      notification_type          = notification.value.notification_type
+      subscriber_sns_topic_arns  = length(try(notification.value.subscriber_sns_topic_arns, [])) > 0 ? notification.value.subscriber_sns_topic_arns : [data.aws_sns_topic.default[0].arn]
+      subscriber_email_addresses = try(notification.value.subscriber_email_addresses, null)
     }
   }
   dynamic "planned_limit" {
