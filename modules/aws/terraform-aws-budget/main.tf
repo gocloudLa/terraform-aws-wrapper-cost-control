@@ -1,13 +1,13 @@
 locals {
-  # Se resuelve el SNS por notificación: si alguna no define subscriber_sns_topic_arns, se busca el topic default para usarlo.
+  # 1 when any notification omits subscriber_sns_topic_arns, so the default topic is looked up.
   enable_sns_default = anytrue([for notification in var.notifications : length(try(notification.subscriber_sns_topic_arns, [])) == 0]) ? 1 : 0
-
 }
 
 data "aws_sns_topic" "default" {
   count = local.enable_sns_default
   name  = var.default_sns_topic_name
 }
+
 resource "aws_budgets_budget" "alarms" {
   name              = var.name
   name_prefix       = null
@@ -35,11 +35,11 @@ resource "aws_budgets_budget" "alarms" {
   metrics = var.metrics
 
   dynamic "filter_expression" {
-    for_each = var.filter_expression != null && var.filter_expression != {} ? [var.filter_expression] : []
+    for_each = var.filter_expression == null ? [] : (length(var.filter_expression) == 0 ? [] : [var.filter_expression])
 
     content {
       dynamic "dimensions" {
-        for_each = try(filter_expression.value.and, null) == null && try(filter_expression.value.dimensions, null) != null ? [filter_expression.value.dimensions] : []
+        for_each = try(filter_expression.value.dimensions, null) == null ? [] : (try(filter_expression.value.and, null) == null ? [filter_expression.value.dimensions] : [])
 
         content {
           key    = dimensions.value.key

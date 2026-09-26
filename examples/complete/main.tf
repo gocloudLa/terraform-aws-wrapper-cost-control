@@ -60,7 +60,7 @@ module "wrapper_cost_control" {
             notification_type = "ACTUAL"
           }
         ]
-        filter_expression = {
+        filter_expression = { # Default: RECORD_TYPE = Usage
           and = [
             {
               dimensions = {
@@ -79,7 +79,7 @@ module "wrapper_cost_control" {
       }
     }
     cost_anomaly = {
-      enable               = true # default false
+      enable               = true # Default: false
       threshold_absolute   = 10
       threshold_percentage = 20
     }

@@ -46,26 +46,25 @@ variable "tags" {
 }
 
 variable "notifications" {
-  description = "List of notification objects for the budget. Each object can define a different set of attributes (threshold, notification_type, comparison_operator, threshold_type, subscriber_email_addresses, subscriber_sns_topic_arns)."
+  description = "Notification objects for the budget."
   type        = any
   default     = []
 }
 
 variable "default_sns_topic_name" {
   type        = string
-  description = ""
+  description = "SNS topic name used when a notification has no subscriber topic ARNs."
   default     = ""
 }
 
-
 variable "filter_expression" {
-  description = "Dimension filter for the budget (key/values). Console Charge type is RECORD_TYPE, not CHARGE_TYPE. Common keys: RECORD_TYPE, SERVICE, LINKED_ACCOUNT, REGION."
+  description = "Dimension filter that scopes which charges the budget measures."
   type        = map(any)
   default     = {}
 }
 
 variable "metrics" {
-  description = "Leave unset. The module always counts the budget in USD."
+  description = "Cost metrics included in the budget calculation."
   type        = list(string)
   default     = []
 }

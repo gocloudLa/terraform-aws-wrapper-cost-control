@@ -13,10 +13,12 @@ module "budget" {
   notifications          = try(each.value.notifications, var.cost_control_defaults.budget.notifications, [])
   planned_limit          = try(each.value.planned_limit, var.cost_control_defaults.budget.planned_limit, [])
   metrics                = try(each.value.metrics, var.cost_control_defaults.budget.metrics, ["UnblendedCost"])
-  filter_expression = try(each.value.filter_expression, var.cost_control_defaults.budget.filter_expression, { dimensions = {
-    key    = "RECORD_TYPE"
-    values = ["Usage"]
-  } })
+  filter_expression = try(each.value.filter_expression, var.cost_control_defaults.budget.filter_expression, {
+    dimensions = {
+      key    = "RECORD_TYPE"
+      values = ["Usage"]
+    }
+  })
 
 
   tags = merge(local.common_tags, try(each.value.tags, var.cost_control_defaults.tags, null))
@@ -27,7 +29,7 @@ module "cost_anomaly" {
   enable = try(var.cost_control_parameters.cost_anomaly.enable, false)
 
   name                   = try(var.cost_control_parameters.cost_anomaly.name, "${local.common_name}-cost-anomaly")
-  default_sns_topic_name = try(var.cost_control_parameters.default_sns_topic_name, var.cost_control_defaults.budget.default_sns_topic_name, local.default_sns_topic_name)
+  default_sns_topic_name = try(var.cost_control_parameters.cost_anomaly.default_sns_topic_name, var.cost_control_defaults.cost_anomaly.default_sns_topic_name, local.default_sns_topic_name)
   monitor_type           = try(var.cost_control_parameters.cost_anomaly.monitor_type, var.cost_control_defaults.cost_anomaly.monitor_type, "DIMENSIONAL")
   monitor_dimension      = try(var.cost_control_parameters.cost_anomaly.monitor_dimension, var.cost_control_defaults.cost_anomaly.monitor_dimension, "SERVICE")
   monitor_specification  = try(var.cost_control_parameters.cost_anomaly.monitor_specification, var.cost_control_defaults.cost_anomaly.monitor_specification, null)
@@ -36,5 +38,5 @@ module "cost_anomaly" {
   threshold_absolute     = try(var.cost_control_parameters.cost_anomaly.threshold_absolute, var.cost_control_defaults.cost_anomaly.threshold_absolute, null)
   threshold_percentage   = try(var.cost_control_parameters.cost_anomaly.threshold_percentage, var.cost_control_defaults.cost_anomaly.threshold_percentage, null)
 
-  tags = merge(local.common_tags, try(var.cost_control_parameters.tags, var.cost_control_defaults.tags, null))
+  tags = merge(local.common_tags, try(var.cost_control_parameters.cost_anomaly.tags, var.cost_control_defaults.tags, null))
 }
