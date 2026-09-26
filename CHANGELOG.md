@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/gocloudLa/terraform-aws-wrapper-cost-control/compare/v1.1.0...v2.0.0) (2026-09-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* **budget:** refactor notifications alerts creations ([#5](https://github.com/gocloudLa/terraform-aws-wrapper-cost-control/issues/5))
+
+### Features
+
+* **budget:** refactor notifications alerts creations ([#5](https://github.com/gocloudLa/terraform-aws-wrapper-cost-control/issues/5)) ([378da9f](https://github.com/gocloudLa/terraform-aws-wrapper-cost-control/commit/378da9f83de8bdb1bcceed979f017ee89417e9cd))
+
 ## [1.1.0](https://github.com/gocloudLa/terraform-aws-wrapper-cost-control/compare/v1.0.0...v1.1.0) (2026-09-14)
 
 
